@@ -74,14 +74,14 @@
       </div>
 
       <div id="existingEmbeddingsFoundCtnEl" style="display:none; padding:0.5rem; background:lightgrey; margin:0.5rem;">
-        <b>Step 5:</b> <b>Existing embeddings found.</b>
+        <b>Step 4.1:</b> <b>Existing embeddings found.</b>
         <br>
         Only needed if you've added or changed images: <button onclick="existingEmbeddingsFoundCtnEl.style.display='none'; computeEmbeddingsCtnEl.style.display=''; disableCtn(searchCtnEl); computeEmbeddingsBtn.click()">(re)compute image embeddings</button>
         <input id="onlyEmbedNewImagesCheckbox" type="checkbox" checked> Only new images?
       </div>
 
       <div id="searchCtnEl" style="opacity:0.5; pointer-events:none; padding:0.5rem; background:lightgrey; margin:0.5rem;">
-        <b>Step 6:</b> Enter a search term or <button id="searchWithImagesBtn" style="font-size:80%;margin-bottom: 0.25rem;" onclick="loadImagesAsQuery()">search with image(s)</button>
+        <b>Step 5:</b> Enter a search term or <button id="searchWithImagesBtn" style="font-size:80%;margin-bottom: 0.25rem;" onclick="loadImagesAsQuery()">search with image(s)</button>
         <br>
         <input id="searchTextEl" style="width:500px;" value="" placeholder="Enter search text here..." onclick="clearImageQueryIfNeeded()" onkeyup="if(event.which==13) searchSort()">
         <button id="searchBtn" onclick="searchSort()">search</button> max results: <input id="maxResultsEl" type="number" value="100" style="width:50px;"> skip first: <input title="skip over this many of the most relevant results" id="skipFirstResultsNumEl" type="number" value="0" style="width:50px;"> score-based visibility: <button onclick="scoreBasedVisibilityCtnEl.style.display=''; this.remove();">enable</button>
