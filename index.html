@@ -3,9 +3,14 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width">
-    <title>OpenAI CLIP Image Search in JavaScript (Using ONNX Web Runtime)</title>
+    <title>OpenAI CLIP Image Search</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
     <script src="enable-threads.js"></script>
     <script src="./vips/vips.js"></script>
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
     <script>
       if (!crossOriginIsolated) SharedArrayBuffer = ArrayBuffer;
     </script>
@@ -14,17 +19,61 @@
     <style>
       body * {
         font-family: monospace;
+        text-align: center;
+
+      }
+
+      .logo {
+        width: 15%;
+        height: 30%;
+      }
+
+      body {
+        font-family: Arial, sans-serif;
+        line-height: 1.6;
+      }
+
+      h1 {
+        color: #333;
+      }
+
+      p {
+        color: #666;
+      }
+
+      #browserCompatibilityWarning {
+        padding: 1rem;
+        background: #ffe382;
+        border: 1px solid #ffa500;
+        color: #333;
+        display: none;
+      }
+
+      b {
+        color: #333;
       }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.12.0/dist/ort.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.17.0/dist/tf.min.js"></script> <!-- NOTE: tfjs is currently only used for image preprocessing stuff. -->
-    
+    <nav class="navbar navbar-dark bg-dark">
+      <!-- Navbar content -->
+      <img class="logo" src="swiftsearch_logo.png" alt="swiftsearch_logo">
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+        <div class="navbar-nav">
+          <a class="nav-item nav-link active" href="#">Home <span class="sr-only">(current)</span></a>
+          <a class="nav-item nav-link" href="https://openai.com/research/clip">OpenAI Research</a>
+          <a class="nav-item nav-link" href="https://github.com/openai/CLIP">Github</a>
+        </div>
+      </div>
+    </nav>
+
     <div>
-      <h1> Welcome to Swift Search - <small>an AI-powered search and retrieval system for effortless exploration of product snapshots</small></h1>
-      <h1 style="font-size:1rem;">Sort/search images using OpenAI's CLIP in your browser</h1>
-      <p>This web app sorts/searches through images in a directory on your computer using OpenAI's CLIP model, and the new File System Access API. 
-      <p>All processing happens in your browser, on your device - i.e. your images are <b>not</b> uploaded to a server for processing.</p>
-      <p id="browserCompatibilityWarning" style="padding:0.25rem; background:rgb(255, 227, 160); display:none;"><b>Heads Up</b>: Your browser is missing one or more features (File System Access API and/or credentialless COEP) that are needed for this demo to work. As of writing, it works in Chrome, Edge and Brave. Other browsers like Firefox and Safari are often a bit slower in implementing cutting-edge features.</p>
+      <br>
+      <h1 style="color: #064428;">Welcome to Swift Search</h1>
+      <p style="color: #064428;">An AI-powered search and retrieval system for effortless exploration of product snapshots</p>
       <script>
         if(!self.crossOriginIsolated || !window.showDirectoryPicker) {
           browserCompatibilityWarning.style.display = "";
@@ -32,7 +81,7 @@
       </script>
       <hr>
       
-      <div id="modelNameSelectCtn" style="padding:0.5rem; background:lightgrey; margin:0.5rem;">
+      <div id="modelNameSelectCtn" style="padding:0.5rem; background:#16f28f; margin:0.5rem; border-radius: 30px;">
         <b>Step 1:</b> Choose model:
         <select onchange="window.MODEL_NAME=this.value;">
           <option value="clip_vit_32">CLIP ViT-B/32 (recommended)</option>
@@ -41,7 +90,7 @@
         </select>
       </div>
       
-      <div id="initCtnEl" style="padding:0.5rem; background:lightgrey; margin:0.5rem;">
+      <div id="initCtnEl" style="padding:0.5rem; background:#16f28f; margin:0.5rem;  border-radius: 30px;">
         <b>Step 2:</b> Download and initialize the models.
         <br>
         Download image model: <progress id="imageModelLoadingProgressBarEl" value="0"></progress> <span id="imageModelLoadingMbEl"></span>
@@ -56,7 +105,7 @@
         <button id="initWorkersBtn" onclick="modelNameSelectCtn.style.pointerEvents='none'; modelNameSelectCtn.style.opacity=0.5; initializeWorkers()">initialize workers</button>
       </div>
 
-      <div id="pickDirCtnEl" style="opacity:0.5; pointer-events:none; padding:0.5rem; background:lightgrey; margin:0.5rem;">
+      <div id="pickDirCtnEl" style="opacity:0.5; pointer-events:none; padding:0.5rem; background:#16f28f; margin:0.5rem;  border-radius: 30px;">
         <b>Step 3:</b> Pick a directory of images (images in subdirectories will be included).
         <br>
         <button id="pickDirectoryBtn" onclick="pickDirectory({source:'local'})">pick directory</button> &nbsp;&nbsp;&nbsp;&nbsp;or&nbsp;&nbsp;&nbsp;&nbsp; <button id="useRedditImagesBtn" onclick="pickDirectory({source:'reddit'})">use ~200k reddit images</button> (remove nsfw:<input id="removeRedditNsfwEl" type="checkbox" checked>)
@@ -65,7 +114,7 @@
         <div id="existingEmbeddingsProgressCtn" style="display:none;">Loading existing embeddings: <span id="existingEmbeddingsLoadedEl">none</span></div>
       </div>
       
-      <div id="computeEmbeddingsCtnEl" style="opacity:0.5; pointer-events:none; padding:0.5rem; background:lightgrey; margin:0.5rem;">
+      <div id="computeEmbeddingsCtnEl" style="opacity:0.5; pointer-events:none; padding:0.5rem; background:#16f28f; margin:0.5rem;  border-radius: 30px;">
         <b>Step 4:</b> Compute image embeddings. <span style="opacity:0.5;">(they will be saved as &lt;ModelName&gt;_embeddings.tsv in the selected directory)</span>
         <br>
         <button id="computeEmbeddingsBtn" onclick="computeImageEmbeddings(); this.disabled=true;">compute image embeddings</button>
@@ -80,7 +129,7 @@
         <input id="onlyEmbedNewImagesCheckbox" type="checkbox" checked> Only new images?
       </div>
 
-      <div id="searchCtnEl" style="opacity:0.5; pointer-events:none; padding:0.5rem; background:lightgrey; margin:0.5rem;">
+      <div id="searchCtnEl" style="opacity:0.5; pointer-events:none; padding:0.5rem; background:#16f28f ; margin:0.5rem; border-radius: 20px;">
         <b>Step 5:</b> Enter a search term or <button id="searchWithImagesBtn" style="font-size:80%;margin-bottom: 0.25rem;" onclick="loadImagesAsQuery()">search with image(s)</button>
         <br>
         <input id="searchTextEl" style="width:500px;" value="" placeholder="Enter search text here..." onclick="clearImageQueryIfNeeded()" onkeyup="if(event.which==13) searchSort()">
@@ -96,6 +145,80 @@
     <b>Results</b> <span id="skippedCountEl"></span> <span style="opacity:0.5;">(hover over images for cosine similarities)</span>
     <div id="resultsEl" style="margin-top:1rem; min-height:100vh;"><span style="opacity:0.5;">Click the search button to compute the results.</span></div>
     
+    <h1 style="font-size:1rem;">Sort/search images using OpenAI's CLIP in your browser</h1>
+      <p>This web app sorts/searches through images in a directory on your computer using OpenAI's CLIP model, and the new File System Access API.</p>
+      <p>All processing happens in your browser, on your device - i.e. your images are <b>not</b> uploaded to a server for processing.</p>
+      <p id="browserCompatibilityWarning"><b>Heads Up</b>: Your browser is missing one or more features (File System Access API and/or credentialless COEP) that are needed for this demo to work. As of writing, it works in Chrome, Edge and Brave. Other browsers like Firefox and Safari are often a bit slower in implementing cutting-edge features.</p>
+    <div class="my-5">
+      <!-- Footer -->
+      <footer
+              class="text-center text-lg-start text-dark"
+              style="background-color: #ECEFF1"
+              >
+        <!-- Section: Social media -->
+        <section
+                class="d-flex justify-content-between p-4 text-white"
+                style="background-color: #21D192"
+                >
+          <!-- Left -->
+          <div class="me-5">
+            <span>More about us!</span>
+          </div>
+        </section>
+
+        <!-- Section: Links  -->
+        <section class="">
+          <div class="container text-center text-md-start mt-5">
+            <!-- Grid row -->
+            <div class="row mt-3">
+              <!-- Grid column -->
+              <div class="col-md-3 col-lg-4 col-xl-3 mx-auto mb-4">
+                <!-- Content -->
+                <h6 class="text-uppercase fw-bold">Swift Search</h6>
+                <hr
+                    class="mb-4 mt-0 d-inline-block mx-auto"
+                    style="width: 60px; background-color: #16f28f; height: 2px"
+                    />
+                    <p>An AI-powered search and retrieval system for effortless exploration of product snapshots</p>
+
+              </div>
+              <div class="col-md-3 col-lg-2 col-xl-2 mx-auto mb-4">
+                <!-- Links -->
+                <h6 class="text-uppercase fw-bold">Useful links</h6>
+                <hr
+                    class="mb-4 mt-0 d-inline-block mx-auto"
+                    style="width: 60px; background-color: #16f28f; height: 2px"
+                    />
+                <p>
+                  <a href="#!" class="text-dark">Your Account</a>
+                </p>
+                <p>
+                  <a href="#!" class="text-dark">Become an Affiliate</a>
+                </p>
+                <p>
+                  <a href="#!" class="text-dark">Shipping Rates</a>
+                </p>
+                <p>
+                  <a href="#!" class="text-dark">Help</a>
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+        <!-- Section: Links  -->
+
+        <!-- Copyright -->
+        <div
+            class="text-center p-3"
+            style="background-color: rgba(0, 0, 0, 0.2)"
+            >
+          © 2024 Copyright - Swift Search
+        </div>
+        <!-- Copyright -->
+      </footer>
+      <!-- Footer -->
+    </div>
+    <!-- End of .container -->
     <script>
       /////////////
       //  STEP 1 //
